@@ -53,47 +53,76 @@ client.interceptors.response.use(
   }
 );
 
-export const api = {
+// PREVIEW_MODE: true = mock 데이터, false = 실제 API
+const PREVIEW_MODE = true;
+
+const mockData: Subscription[] = [
+  { id: '1', name: 'Netflix', price: 17000, billingCycle: 'monthly', billingDate: 15, category: 'video', color: '#E50914', icon: '🎬', isActive: true, createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: '2', name: 'YouTube Premium', price: 14900, billingCycle: 'monthly', billingDate: 20, category: 'video', color: '#FF0000', icon: '▶️', isActive: true, createdAt: '2024-02-01', updatedAt: '2024-02-01' },
+  { id: '3', name: 'Spotify', price: 10900, billingCycle: 'monthly', billingDate: 5, category: 'music', color: '#1DB954', icon: '🎵', isActive: true, createdAt: '2024-03-01', updatedAt: '2024-03-01' },
+  { id: '4', name: 'ChatGPT Plus', price: 30000, billingCycle: 'monthly', billingDate: 10, category: 'productivity', color: '#10A37F', icon: '🤖', isActive: true, createdAt: '2024-04-01', updatedAt: '2024-04-01' },
+  { id: '5', name: 'iCloud+', price: 1100, billingCycle: 'monthly', billingDate: 25, category: 'cloud', color: '#3693F5', icon: '☁️', isActive: true, createdAt: '2024-05-01', updatedAt: '2024-05-01' },
+  { id: '6', name: 'Disney+', price: 9900, billingCycle: 'monthly', billingDate: 1, category: 'video', color: '#113CCF', icon: '🏰', isActive: false, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+];
+
+function getMockSummary(subs: Subscription[]): SubscriptionSummary {
+  const active = subs.filter((s) => s.isActive);
+  const totalMonthly = active.reduce((sum, s) => sum + s.price, 0);
+  const today = new Date();
+  const upcomingPayments = active.map((s) => {
+    let dueDate = new Date(today.getFullYear(), today.getMonth(), s.billingDate);
+    if (dueDate <= today) dueDate = new Date(today.getFullYear(), today.getMonth() + 1, s.billingDate);
+    const daysUntil = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return { subscription: s, dueDate: dueDate.toISOString().split('T')[0], daysUntil };
+  }).sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5);
+  return { totalMonthly, totalYearly: totalMonthly * 12, activeCount: active.length, upcomingPayments };
+}
+
+let _mockData = [...mockData];
+
+const mockApi = {
+  async getSubscriptions(): Promise<Subscription[]> { return [..._mockData]; },
+  async createSubscription(req: CreateSubscriptionRequest): Promise<Subscription> {
+    const newSub: Subscription = { id: Date.now().toString(), ...req, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    _mockData.push(newSub);
+    return newSub;
+  },
+  async updateSubscription(id: string, req: UpdateSubscriptionRequest): Promise<Subscription> {
+    const idx = _mockData.findIndex((s) => s.id === id);
+    if (idx !== -1) _mockData[idx] = { ..._mockData[idx], ...req, updatedAt: new Date().toISOString() } as Subscription;
+    return _mockData[idx];
+  },
+  async deleteSubscription(id: string): Promise<void> { _mockData = _mockData.filter((s) => s.id !== id); },
+  async getSummary(): Promise<SubscriptionSummary> { return getMockSummary(_mockData); },
+};
+
+const realApi = {
   async getSubscriptions(): Promise<Subscription[]> {
     const res = await client.get('/api/subscriptions');
     return res.data.map(mapSubscription);
   },
-
   async createSubscription(req: CreateSubscriptionRequest): Promise<Subscription> {
-    const res = await client.post('/api/subscriptions', {
-      ...req,
-      billingCycle: req.billingCycle.toUpperCase(),
-    });
+    const res = await client.post('/api/subscriptions', { ...req, billingCycle: req.billingCycle.toUpperCase() });
     return mapSubscription(res.data);
   },
-
   async updateSubscription(id: string, req: UpdateSubscriptionRequest): Promise<Subscription> {
-    const res = await client.put(`/api/subscriptions/${id}`, {
-      ...req,
-      billingCycle: req.billingCycle?.toUpperCase(),
-    });
+    const res = await client.put(`/api/subscriptions/${id}`, { ...req, billingCycle: req.billingCycle?.toUpperCase() });
     return mapSubscription(res.data);
   },
-
   async deleteSubscription(id: string): Promise<void> {
     await client.delete(`/api/subscriptions/${id}`);
   },
-
   async getSummary(): Promise<SubscriptionSummary> {
     const res = await client.get('/api/subscriptions/summary');
     const data = res.data;
     return {
-      totalMonthly: data.totalMonthly,
-      totalYearly: data.totalYearly,
-      activeCount: data.activeCount,
-      upcomingPayments: data.upcomingPayments.map((p: any) => ({
-        subscription: mapSubscription(p.subscription),
-        dueDate: p.dueDate,
-        daysUntil: p.daysUntil,
-      })),
+      totalMonthly: data.totalMonthly, totalYearly: data.totalYearly, activeCount: data.activeCount,
+      upcomingPayments: data.upcomingPayments.map((p: any) => ({ subscription: mapSubscription(p.subscription), dueDate: p.dueDate, daysUntil: p.daysUntil })),
     };
   },
 };
+
+export const api = PREVIEW_MODE ? mockApi : realApi;
 
 function mapSubscription(data: any): Subscription {
   return {

@@ -8,6 +8,9 @@ import { useThemeStore } from '../stores/useThemeStore';
 import { useCurrencyStore } from '../stores/useCurrencyStore';
 import { COLORS } from '../constants/colors';
 
+// PREVIEW_MODE: true = 인증 우회, mock 데이터로 전체 화면 확인
+const PREVIEW_MODE = true;
+
 export default function RootLayout() {
   const { token, isLoading, loadToken } = useAuthStore();
   const { loadMode } = useThemeStore();
@@ -16,12 +19,18 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    loadToken();
+    if (PREVIEW_MODE) {
+      // 프리뷰 모드: mock 인증 상태 설정
+      useAuthStore.setState({ token: 'preview-token', nickname: '프리뷰 유저', isLoading: false });
+    } else {
+      loadToken();
+    }
     loadMode();
     loadCurrency();
   }, []);
 
   useEffect(() => {
+    if (PREVIEW_MODE) return;
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === 'auth';
@@ -33,7 +42,7 @@ export default function RootLayout() {
     }
   }, [token, isLoading, segments]);
 
-  if (isLoading) {
+  if (!PREVIEW_MODE && isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
         <ActivityIndicator size="large" color={COLORS.primary} />
