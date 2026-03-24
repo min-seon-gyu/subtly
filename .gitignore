@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Backend build artifacts
+backend/.gradle/
+backend/build/

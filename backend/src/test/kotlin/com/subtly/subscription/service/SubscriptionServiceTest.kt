@@ -2,6 +2,7 @@ package com.subtly.subscription.service
 
 import com.subtly.auth.entity.Member
 import com.subtly.auth.repository.MemberRepository
+import com.subtly.config.NotFoundException
 import com.subtly.subscription.dto.CreateSubscriptionRequest
 import com.subtly.subscription.dto.UpdateSubscriptionRequest
 import com.subtly.subscription.entity.BillingCycle
@@ -139,7 +140,7 @@ class SubscriptionServiceTest {
                 otherMember.id, created.id,
                 UpdateSubscriptionRequest(name = "해킹")
             )
-        }.isInstanceOf(IllegalArgumentException::class.java)
+        }.isInstanceOf(NotFoundException::class.java)
     }
 
     @Test
@@ -151,7 +152,7 @@ class SubscriptionServiceTest {
 
         assertThatThrownBy {
             subscriptionService.deleteSubscription(otherMember.id, created.id)
-        }.isInstanceOf(IllegalArgumentException::class.java)
+        }.isInstanceOf(NotFoundException::class.java)
     }
 
     @Test

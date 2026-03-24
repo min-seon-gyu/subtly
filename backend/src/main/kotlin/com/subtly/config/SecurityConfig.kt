@@ -26,10 +26,9 @@ class SecurityConfig(
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+                it.requestMatchers("/api/auth/**").permitAll()
                     .anyRequest().authenticated()
             }
-            .headers { it.frameOptions { frame -> frame.disable() } }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
     }
@@ -40,9 +39,14 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val config = CorsConfiguration().apply {
-            allowedOrigins = listOf("*")
+            allowedOriginPatterns = listOf(
+                "http://localhost:*",
+                "http://10.0.2.2:*",
+                "exp://*",
+            )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("*")
+            allowedHeaders = listOf("Authorization", "Content-Type")
+            allowCredentials = true
         }
         return UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration("/**", config)

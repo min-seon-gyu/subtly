@@ -4,7 +4,10 @@ import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "subscriptions")
+@Table(
+    name = "subscriptions",
+    indexes = [Index(name = "idx_subscription_member_id", columnList = "memberId")]
+)
 class Subscription(
     @Column(nullable = false)
     var name: String,

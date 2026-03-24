@@ -1,5 +1,6 @@
 package com.subtly.subscription.service
 
+import com.subtly.config.NotFoundException
 import com.subtly.subscription.dto.*
 import com.subtly.subscription.entity.BillingCycle
 import com.subtly.subscription.entity.Subscription
@@ -40,7 +41,7 @@ class SubscriptionService(
     @Transactional
     fun updateSubscription(memberId: Long, id: Long, request: UpdateSubscriptionRequest): SubscriptionResponse {
         val subscription = subscriptionRepository.findByIdAndMemberId(id, memberId)
-            ?: throw IllegalArgumentException("구독 정보를 찾을 수 없습니다")
+            ?: throw NotFoundException("구독 정보를 찾을 수 없습니다")
 
         subscription.update(
             name = request.name,
@@ -59,7 +60,7 @@ class SubscriptionService(
     @Transactional
     fun deleteSubscription(memberId: Long, id: Long) {
         val subscription = subscriptionRepository.findByIdAndMemberId(id, memberId)
-            ?: throw IllegalArgumentException("구독 정보를 찾을 수 없습니다")
+            ?: throw NotFoundException("구독 정보를 찾을 수 없습니다")
         subscriptionRepository.delete(subscription)
     }
 

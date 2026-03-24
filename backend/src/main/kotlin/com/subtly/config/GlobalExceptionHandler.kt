@@ -11,6 +11,11 @@ data class ErrorResponse(val message: String)
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(e: NotFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse(e.message ?: "리소스를 찾을 수 없습니다"))
+    }
+
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(e: IllegalArgumentException): ResponseEntity<ErrorResponse> {
         return ResponseEntity.badRequest().body(ErrorResponse(e.message ?: "잘못된 요청입니다"))
