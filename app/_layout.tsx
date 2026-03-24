@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useAuthStore } from '../stores/useAuthStore';
 import { COLORS } from '../constants/colors';
 
@@ -51,6 +52,7 @@ export default function RootLayout() {
         <Stack.Screen name="edit" options={{ title: '구독 수정' }} />
         <Stack.Screen name="detail" options={{ title: '구독 상세' }} />
       </Stack>
+      <Toast />
     </>
   );
 }

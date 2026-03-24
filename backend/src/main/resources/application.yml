@@ -1,20 +1,41 @@
 spring:
+  profiles:
+    active: local
+
+jwt:
+  secret: subtly-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration: 86400000 # 24 hours
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/subtly?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: subtly
+    password: subtly1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
   datasource:
     url: jdbc:h2:mem:subtly
     driver-class-name: org.h2.Driver
     username: sa
     password:
-  h2:
-    console:
-      enabled: true
   jpa:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-jwt:
-  secret: subtly-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256
-  expiration: 86400000 # 24 hours

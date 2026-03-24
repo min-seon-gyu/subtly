@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: subtly-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: subtly
+      MYSQL_USER: subtly
+      MYSQL_PASSWORD: subtly1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - subtly-mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  subtly-mysql-data:

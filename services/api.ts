@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import Toast from 'react-native-toast-message';
 import {
   Subscription,
   SubscriptionSummary,
@@ -19,6 +20,25 @@ client.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+client.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      await SecureStore.deleteItemAsync('token');
+      await SecureStore.deleteItemAsync('nickname');
+      const { useAuthStore } = require('../stores/useAuthStore');
+      useAuthStore.setState({ token: null, nickname: null });
+      Toast.show({ type: 'error', text1: '세션 만료', text2: '다시 로그인해주세요.' });
+    } else if (error.response?.status === 400) {
+      const message = error.response?.data?.message ?? '요청을 확인해주세요.';
+      Toast.show({ type: 'error', text1: '요청 오류', text2: message });
+    } else if (!error.response) {
+      Toast.show({ type: 'error', text1: '네트워크 오류', text2: '서버에 연결할 수 없습니다.' });
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const api = {
   async getSubscriptions(): Promise<Subscription[]> {
