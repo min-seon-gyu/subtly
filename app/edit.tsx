@@ -1,0 +1,56 @@
+import { View, StyleSheet } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native';
+import SubscriptionForm from '../components/SubscriptionForm';
+import { useSubscriptionStore } from '../stores/useSubscriptionStore';
+import { CreateSubscriptionRequest } from '../types/subscription';
+import { COLORS } from '../constants/colors';
+
+export default function EditScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { subscriptions, updateSubscription } = useSubscriptionStore();
+
+  const subscription = subscriptions.find((s) => s.id === id);
+
+  if (!subscription) {
+    router.back();
+    return null;
+  }
+
+  const handleSubmit = async (data: CreateSubscriptionRequest) => {
+    await updateSubscription(subscription.id, data);
+    router.back();
+  };
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <SubscriptionForm
+          initialValues={{
+            name: subscription.name,
+            price: subscription.price,
+            billingCycle: subscription.billingCycle,
+            billingDate: subscription.billingDate,
+            category: subscription.category,
+            memo: subscription.memo,
+          }}
+          onSubmit={handleSubmit}
+          onCancel={() => router.back()}
+          submitLabel="수정"
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+});

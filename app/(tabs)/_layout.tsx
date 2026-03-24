@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/colors';
 
 export default function TabLayout() {
@@ -23,8 +24,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '홈',
-          tabBarIcon: ({ color }) => (
-            <TabIcon label="🏠" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
@@ -32,8 +33,8 @@ export default function TabLayout() {
         name="subscriptions"
         options={{
           title: '구독',
-          tabBarIcon: ({ color }) => (
-            <TabIcon label="📋" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list-outline" size={size} color={color} />
           ),
         }}
       />
@@ -41,17 +42,11 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: '설정',
-          tabBarIcon: ({ color }) => (
-            <TabIcon label="⚙️" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />
     </Tabs>
-  );
-}
-
-function TabIcon({ label }: { label: string; color: string }) {
-  return (
-    <>{label}</>
   );
 }

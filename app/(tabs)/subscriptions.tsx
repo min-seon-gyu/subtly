@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSubscriptionStore } from '../../stores/useSubscriptionStore';
 import SubscriptionCard from '../../components/SubscriptionCard';
 import { COLORS } from '../../constants/colors';
@@ -10,9 +10,18 @@ import { Subscription } from '../../types/subscription';
 export default function SubscriptionsScreen() {
   const { subscriptions, fetchSubscriptions } = useSubscriptionStore();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchSubscriptions();
+  useFocusEffect(
+    useCallback(() => {
+      fetchSubscriptions();
+    }, [])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchSubscriptions();
+    setRefreshing(false);
   }, []);
 
   const handlePress = (subscription: Subscription) => {
@@ -40,6 +49,9 @@ export default function SubscriptionsScreen() {
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+          }
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyIcon}>📭</Text>

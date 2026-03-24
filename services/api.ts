@@ -1,125 +1,80 @@
-import dayjs from 'dayjs';
+import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
 import {
   Subscription,
   SubscriptionSummary,
   CreateSubscriptionRequest,
   UpdateSubscriptionRequest,
-  UpcomingPayment,
 } from '../types/subscription';
+import { API_BASE_URL } from '../constants/config';
 
-// Mock 데이터 — 실제 백엔드 연결 시 이 파일만 수정하면 됨
-let mockSubscriptions: Subscription[] = [
-  {
-    id: '1',
-    name: 'Netflix',
-    price: 17000,
-    billingCycle: 'monthly',
-    billingDate: 15,
-    category: 'video',
-    color: '#E50914',
-    icon: '🎬',
-    isActive: true,
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-  },
-  {
-    id: '2',
-    name: 'YouTube Premium',
-    price: 14900,
-    billingCycle: 'monthly',
-    billingDate: 20,
-    category: 'video',
-    color: '#FF0000',
-    icon: '▶️',
-    isActive: true,
-    createdAt: '2024-02-01',
-    updatedAt: '2024-02-01',
-  },
-  {
-    id: '3',
-    name: 'Spotify',
-    price: 10900,
-    billingCycle: 'monthly',
-    billingDate: 5,
-    category: 'music',
-    color: '#1DB954',
-    icon: '🎵',
-    isActive: true,
-    createdAt: '2024-03-01',
-    updatedAt: '2024-03-01',
-  },
-];
+const client = axios.create({
+  baseURL: API_BASE_URL,
+});
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
+client.interceptors.request.use(async (config) => {
+  const token = await SecureStore.getItemAsync('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-function calculateUpcomingPayments(subscriptions: Subscription[]): UpcomingPayment[] {
-  const today = dayjs();
-  return subscriptions
-    .filter((s) => s.isActive)
-    .map((s) => {
-      let dueDate = today.date(s.billingDate);
-      if (dueDate.isBefore(today, 'day')) {
-        dueDate = dueDate.add(1, 'month');
-      }
-      return {
-        subscription: s,
-        dueDate: dueDate.format('YYYY-MM-DD'),
-        daysUntil: dueDate.diff(today, 'day'),
-      };
-    })
-    .sort((a, b) => a.daysUntil - b.daysUntil);
-}
-
-// API 함수들 — 백엔드 연결 시 axios 호출로 교체
 export const api = {
   async getSubscriptions(): Promise<Subscription[]> {
-    return [...mockSubscriptions];
+    const res = await client.get('/api/subscriptions');
+    return res.data.map(mapSubscription);
   },
 
   async createSubscription(req: CreateSubscriptionRequest): Promise<Subscription> {
-    const now = dayjs().format('YYYY-MM-DD');
-    const newSub: Subscription = {
-      id: generateId(),
+    const res = await client.post('/api/subscriptions', {
       ...req,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    };
-    mockSubscriptions.push(newSub);
-    return newSub;
+      billingCycle: req.billingCycle.toUpperCase(),
+    });
+    return mapSubscription(res.data);
   },
 
   async updateSubscription(id: string, req: UpdateSubscriptionRequest): Promise<Subscription> {
-    const index = mockSubscriptions.findIndex((s) => s.id === id);
-    if (index === -1) throw new Error('Subscription not found');
-    mockSubscriptions[index] = {
-      ...mockSubscriptions[index],
+    const res = await client.put(`/api/subscriptions/${id}`, {
       ...req,
-      updatedAt: dayjs().format('YYYY-MM-DD'),
-    };
-    return mockSubscriptions[index];
+      billingCycle: req.billingCycle?.toUpperCase(),
+    });
+    return mapSubscription(res.data);
   },
 
   async deleteSubscription(id: string): Promise<void> {
-    mockSubscriptions = mockSubscriptions.filter((s) => s.id !== id);
+    await client.delete(`/api/subscriptions/${id}`);
   },
 
   async getSummary(): Promise<SubscriptionSummary> {
-    const active = mockSubscriptions.filter((s) => s.isActive);
-    const totalMonthly = active.reduce((sum, s) => {
-      if (s.billingCycle === 'monthly') return sum + s.price;
-      if (s.billingCycle === 'yearly') return sum + Math.round(s.price / 12);
-      if (s.billingCycle === 'weekly') return sum + s.price * 4;
-      return sum;
-    }, 0);
-
+    const res = await client.get('/api/subscriptions/summary');
+    const data = res.data;
     return {
-      totalMonthly,
-      totalYearly: totalMonthly * 12,
-      activeCount: active.length,
-      upcomingPayments: calculateUpcomingPayments(active).slice(0, 5),
+      totalMonthly: data.totalMonthly,
+      totalYearly: data.totalYearly,
+      activeCount: data.activeCount,
+      upcomingPayments: data.upcomingPayments.map((p: any) => ({
+        subscription: mapSubscription(p.subscription),
+        dueDate: p.dueDate,
+        daysUntil: p.daysUntil,
+      })),
     };
   },
 };
+
+function mapSubscription(data: any): Subscription {
+  return {
+    id: data.id.toString(),
+    name: data.name,
+    price: data.price,
+    billingCycle: data.billingCycle.toLowerCase(),
+    billingDate: data.billingDate,
+    category: data.category,
+    color: data.color,
+    icon: data.icon,
+    memo: data.memo,
+    isActive: data.isActive,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}

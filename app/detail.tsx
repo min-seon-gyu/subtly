@@ -81,6 +81,12 @@ export default function DetailScreen() {
 
         <View style={styles.actions}>
           <TouchableOpacity
+            style={[styles.actionButton, styles.editButton]}
+            onPress={() => router.push({ pathname: '/edit', params: { id: subscription.id } })}
+          >
+            <Text style={styles.editText}>수정</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.actionButton, styles.toggleButton]}
             onPress={handleToggleActive}
           >
@@ -187,6 +193,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: COLORS.primary,
+  },
+  editText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   toggleButton: {
     backgroundColor: COLORS.surface,

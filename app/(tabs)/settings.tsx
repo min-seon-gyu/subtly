@@ -1,11 +1,20 @@
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { useState } from 'react';
 import { COLORS } from '../../constants/colors';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 export default function SettingsScreen() {
   const [notificationEnabled, setNotificationEnabled] = useState(true);
   const [reminderDays, setReminderDays] = useState(3);
+  const { nickname, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      { text: '로그아웃', style: 'destructive', onPress: logout },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -46,6 +55,17 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>계정</Text>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>닉네임</Text>
+            <Text style={styles.rowValue}>{nickname ?? '-'}</Text>
+          </View>
+          <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
+            <Text style={styles.logoutText}>로그아웃</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -136,5 +156,17 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     minWidth: 20,
     textAlign: 'center',
+  },
+  logoutRow: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.danger,
   },
 });
