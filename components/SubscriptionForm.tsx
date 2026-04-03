@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TextInput,
+  ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -20,6 +21,7 @@ interface Props {
   onSubmit: (data: CreateSubscriptionRequest) => void;
   onCancel: () => void;
   submitLabel?: string;
+  isSubmitting?: boolean;
 }
 
 const CYCLES: { label: string; value: BillingCycle }[] = [
@@ -28,7 +30,7 @@ const CYCLES: { label: string; value: BillingCycle }[] = [
   { label: '매주', value: 'weekly' },
 ];
 
-export default function SubscriptionForm({ initialValues, onSubmit, onCancel, submitLabel = '추가' }: Props) {
+export default function SubscriptionForm({ initialValues, onSubmit, onCancel, submitLabel = '추가', isSubmitting = false }: Props) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -169,11 +171,15 @@ export default function SubscriptionForm({ initialValues, onSubmit, onCancel, su
             <Text style={styles.cancelText}>취소</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.submitButton, !isValid && styles.submitButtonDisabled]}
+            style={[styles.submitButton, (!isValid || isSubmitting) && styles.submitButtonDisabled]}
             onPress={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
           >
-            <Text style={styles.submitText}>{submitLabel}</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.submitText}>{submitLabel}</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

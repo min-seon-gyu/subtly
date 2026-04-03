@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native';
 import { useSubscriptionStore } from '../stores/useSubscriptionStore';
@@ -24,6 +25,7 @@ export default function DetailScreen() {
   const router = useRouter();
   const { subscriptions, deleteSubscription, updateSubscription } = useSubscriptionStore();
 
+  const [actionLoading, setActionLoading] = useState(false);
   const subscription = subscriptions.find((s) => s.id === id);
 
   if (!subscription) {
@@ -48,15 +50,20 @@ export default function DetailScreen() {
           text: '삭제',
           style: 'destructive',
           onPress: async () => {
-            await deleteSubscription(subscription.id);
-            router.back();
+            setActionLoading(true);
+            try {
+              await deleteSubscription(subscription.id);
+              router.back();
+            } finally {
+              setActionLoading(false);
+            }
           },
         },
       ],
     );
   };
 
-  const handleToggleActive = () => {
+  const handleToggleActive = async () => {
     if (subscription.isActive) {
       Alert.alert(
         '구독 일시정지',
@@ -73,18 +80,27 @@ export default function DetailScreen() {
           },
           {
             text: '기한 없이',
-            onPress: () => updateSubscription(subscription.id, { isActive: false, pausedUntil: null }),
+            onPress: async () => {
+              setActionLoading(true);
+              try { await updateSubscription(subscription.id, { isActive: false, pausedUntil: null }); } finally { setActionLoading(false); }
+            },
           },
         ],
       );
     } else {
-      updateSubscription(subscription.id, { isActive: true, pausedUntil: null });
+      setActionLoading(true);
+      try { await updateSubscription(subscription.id, { isActive: true, pausedUntil: null }); } finally { setActionLoading(false); }
     }
   };
 
-  const pauseFor = (months: number) => {
-    const until = dayjs().add(months, 'month').format('YYYY-MM-DD');
-    updateSubscription(subscription.id, { isActive: false, pausedUntil: until });
+  const pauseFor = async (months: number) => {
+    setActionLoading(true);
+    try {
+      const until = dayjs().add(months, 'month').format('YYYY-MM-DD');
+      await updateSubscription(subscription.id, { isActive: false, pausedUntil: until });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -128,16 +144,22 @@ export default function DetailScreen() {
             <Text style={styles.editText}>수정</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, styles.toggleButton]}
+            style={[styles.actionButton, styles.toggleButton, actionLoading && styles.actionDisabled]}
             onPress={handleToggleActive}
+            disabled={actionLoading}
           >
-            <Text style={styles.toggleText}>
-              {subscription.isActive ? '구독 일시정지' : '구독 재개'}
-            </Text>
+            {actionLoading ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <Text style={styles.toggleText}>
+                {subscription.isActive ? '구독 일시정지' : '구독 재개'}
+              </Text>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
+            style={[styles.actionButton, styles.deleteButton, actionLoading && styles.actionDisabled]}
             onPress={handleDelete}
+            disabled={actionLoading}
           >
             <Text style={styles.deleteText}>삭제</Text>
           </TouchableOpacity>
@@ -237,6 +259,9 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
+  },
+  actionDisabled: {
+    opacity: 0.5,
   },
   editButton: {
     backgroundColor: colors.primary,

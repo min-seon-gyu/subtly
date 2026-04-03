@@ -52,6 +52,7 @@ export default function AddScreen() {
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
           submitLabel="추가"
+          isSubmitting={submitting}
         />
       </View>
     </SafeAreaView>

@@ -51,6 +51,7 @@ export default function EditScreen() {
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
           submitLabel="수정"
+          isSubmitting={submitting}
         />
       </View>
     </SafeAreaView>
