@@ -11,13 +11,14 @@ import { useTheme } from '../../hooks/useTheme';
 import { ColorScheme } from '../../constants/colors';
 import { useBudgetStore } from '../../stores/useBudgetStore';
 import { useCurrencyStore } from '../../stores/useCurrencyStore';
+import MonthlyReport from '../../components/MonthlyReport';
 import { SkeletonBox } from '../../components/Skeleton';
 import PressableScale from '../../components/PressableScale';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const { summary, isLoading, error, fetchSummary } = useSubscriptionStore();
+  const { subscriptions, summary, isLoading, error, isOffline, fetchSummary, fetchSubscriptions } = useSubscriptionStore();
   const { nickname } = useAuthStore();
   const { monthlyBudget } = useBudgetStore();
   const { formatPrice } = useCurrencyStore();
@@ -28,11 +29,12 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchSummary();
+    fetchSubscriptions();
   }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchSummary();
+    await Promise.all([fetchSummary(), fetchSubscriptions()]);
     setRefreshing(false);
   }, []);
 
@@ -49,6 +51,12 @@ export default function HomeScreen() {
           {nickname ? `${nickname}님, 안녕하세요` : 'Subtly'}
         </Text>
         <Text style={styles.subtitle}>은근히 새는 구독, 한눈에.</Text>
+
+        {isOffline && (
+          <View style={styles.offlineBanner}>
+            <Text style={styles.offlineText}>오프라인 모드 — 마지막 저장된 데이터입니다</Text>
+          </View>
+        )}
 
         {isLoading && !summary ? (
           <View style={styles.loading}>
@@ -98,6 +106,7 @@ export default function HomeScreen() {
               </View>
             )}
             <UpcomingPayments payments={summary.upcomingPayments} />
+            <MonthlyReport subscriptions={subscriptions} />
           </>
         ) : (
           <View style={styles.empty}>
@@ -134,9 +143,20 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
     marginTop: 4,
     marginBottom: 24,
   },
+  offlineBanner: {
+    backgroundColor: colors.warning,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 16,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2D3436',
+    textAlign: 'center',
+  },
   loading: {
-    paddingTop: 60,
-    alignItems: 'center',
+    paddingTop: 16,
   },
   empty: {
     paddingTop: 60,
