@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTheme } from '../hooks/useTheme';
 import { ColorScheme } from '../constants/colors';
 
@@ -9,103 +10,100 @@ interface Props {
   placeholder?: string;
 }
 
-export default function DateInput({ value, onChange, placeholder = 'YYYY-MM-DD' }: Props) {
+function parseDate(value: string): Date {
+  if (!value) return new Date();
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+function formatDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatDisplay(value: string): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+export default function DateInput({ value, onChange, placeholder = '날짜 선택' }: Props) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const [visible, setVisible] = useState(false);
+  const [show, setShow] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(parseDate(value));
 
-  const parts = value ? value.split('-') : ['', '', ''];
-  const [year, setYear] = useState(parts[0] || '');
-  const [month, setMonth] = useState(parts[1] || '');
-  const [day, setDay] = useState(parts[2] || '');
-
-  const handleOpen = () => {
-    const p = value ? value.split('-') : ['', '', ''];
-    setYear(p[0] || '');
-    setMonth(p[1] || '');
-    setDay(p[2] || '');
-    setVisible(true);
+  const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShow(false);
+      if (_event.type === 'set' && selectedDate) {
+        onChange(formatDate(selectedDate));
+      }
+    } else {
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
+    }
   };
 
-  const handleConfirm = () => {
-    if (year && month && day) {
-      const y = year.padStart(4, '0');
-      const m = month.padStart(2, '0');
-      const d = day.padStart(2, '0');
-      onChange(`${y}-${m}-${d}`);
-    } else {
-      onChange('');
-    }
-    setVisible(false);
+  const handleConfirmIOS = () => {
+    onChange(formatDate(tempDate));
+    setShow(false);
   };
 
   const handleClear = () => {
     onChange('');
-    setVisible(false);
+    setShow(false);
   };
 
   return (
-    <>
-      <TouchableOpacity style={styles.trigger} onPress={handleOpen}>
+    <View>
+      <TouchableOpacity style={styles.trigger} onPress={() => {
+        setTempDate(parseDate(value));
+        setShow(true);
+      }}>
         <Text style={value ? styles.triggerText : styles.triggerPlaceholder}>
-          {value || placeholder}
+          {value ? formatDisplay(value) : placeholder}
         </Text>
+        {value ? (
+          <TouchableOpacity onPress={handleClear} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Text style={styles.clearIcon}>X</Text>
+          </TouchableOpacity>
+        ) : null}
       </TouchableOpacity>
 
-      <Modal visible={visible} transparent animationType="fade">
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setVisible(false)}>
-          <View style={styles.modal} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>날짜 입력</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  value={year}
-                  onChangeText={(t) => setYear(t.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="2025"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  maxLength={4}
-                />
-                <Text style={styles.inputLabel}>년</Text>
-              </View>
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  value={month}
-                  onChangeText={(t) => setMonth(t.replace(/\D/g, '').slice(0, 2))}
-                  placeholder="01"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <Text style={styles.inputLabel}>월</Text>
-              </View>
-              <View style={styles.inputGroup}>
-                <TextInput
-                  style={styles.input}
-                  value={day}
-                  onChangeText={(t) => setDay(t.replace(/\D/g, '').slice(0, 2))}
-                  placeholder="01"
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType="numeric"
-                  maxLength={2}
-                />
-                <Text style={styles.inputLabel}>일</Text>
-              </View>
-            </View>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
-                <Text style={styles.clearText}>초기화</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-                <Text style={styles.confirmText}>확인</Text>
-              </TouchableOpacity>
-            </View>
+      {show && Platform.OS === 'ios' && (
+        <View style={styles.iosContainer}>
+          <DateTimePicker
+            value={tempDate}
+            mode="date"
+            display="spinner"
+            onChange={handleChange}
+            locale="ko"
+          />
+          <View style={styles.iosButtons}>
+            <TouchableOpacity style={styles.iosCancelButton} onPress={() => setShow(false)}>
+              <Text style={styles.iosCancelText}>취소</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iosConfirmButton} onPress={handleConfirmIOS}>
+              <Text style={styles.iosConfirmText}>확인</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </Modal>
-    </>
+        </View>
+      )}
+
+      {show && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={tempDate}
+          mode="date"
+          display="default"
+          onChange={handleChange}
+        />
+      )}
+    </View>
   );
 }
 
@@ -116,6 +114,9 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   triggerText: {
     fontSize: 16,
@@ -125,76 +126,44 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
     fontSize: 16,
     color: colors.textMuted,
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modal: {
-    backgroundColor: colors.background,
-    borderRadius: 20,
-    padding: 24,
-    width: '85%',
-  },
-  modalTitle: {
-    fontSize: 18,
+  clearIcon: {
+    fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 20,
+    color: colors.textMuted,
+    paddingHorizontal: 4,
   },
-  inputRow: {
+  iosContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  iosButtons: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 20,
-  },
-  inputGroup: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 10,
     padding: 12,
-    fontSize: 16,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    textAlign: 'center',
   },
-  inputLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  clearButton: {
+  iosCancelButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.background,
     alignItems: 'center',
   },
-  clearText: {
-    fontSize: 15,
+  iosCancelText: {
+    fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
   },
-  confirmButton: {
+  iosConfirmButton: {
     flex: 2,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
     backgroundColor: colors.primary,
     alignItems: 'center',
   },
-  confirmText: {
-    fontSize: 15,
+  iosConfirmText: {
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
   },

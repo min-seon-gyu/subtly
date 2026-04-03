@@ -41,6 +41,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-router',
     'expo-secure-store',
     'expo-web-browser',
+    '@react-native-community/datetimepicker',
   ],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL ?? 'http://localhost:8080',
