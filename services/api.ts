@@ -106,7 +106,11 @@ const realApi = {
     return mapSubscription(res.data);
   },
   async updateSubscription(id: string, req: UpdateSubscriptionRequest): Promise<Subscription> {
-    const res = await client.put(`/api/subscriptions/${id}`, { ...req, billingCycle: req.billingCycle?.toUpperCase() });
+    const body: any = { ...req, billingCycle: req.billingCycle?.toUpperCase() };
+    if ('pausedUntil' in req && req.pausedUntil === null) {
+      body.clearPausedUntil = true;
+    }
+    const res = await client.put(`/api/subscriptions/${id}`, body);
     return mapSubscription(res.data);
   },
   async deleteSubscription(id: string): Promise<void> {

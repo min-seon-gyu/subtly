@@ -32,6 +32,9 @@ class SubscriptionService(
                 color = request.color,
                 icon = request.icon,
                 memo = request.memo,
+                startDate = request.startDate,
+                endDate = request.endDate,
+                paymentMethod = request.paymentMethod,
                 memberId = memberId,
             )
         )
@@ -53,6 +56,14 @@ class SubscriptionService(
             icon = request.icon,
             memo = request.memo,
             isActive = request.isActive,
+            setPausedUntil = request.pausedUntil != null || request.clearPausedUntil,
+            pausedUntil = request.pausedUntil,
+            setStartDate = request.startDate != null,
+            startDate = request.startDate,
+            setEndDate = request.endDate != null,
+            endDate = request.endDate,
+            setPaymentMethod = request.paymentMethod != null,
+            paymentMethod = request.paymentMethod,
         )
         return SubscriptionResponse.from(subscription)
     }

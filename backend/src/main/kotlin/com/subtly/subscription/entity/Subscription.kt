@@ -1,6 +1,7 @@
 package com.subtly.subscription.entity
 
 import jakarta.persistence.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
@@ -36,6 +37,14 @@ class Subscription(
     @Column(nullable = false)
     var isActive: Boolean = true,
 
+    var pausedUntil: LocalDate? = null,
+
+    var startDate: LocalDate? = null,
+
+    var endDate: LocalDate? = null,
+
+    var paymentMethod: String? = null,
+
     @Column(nullable = false)
     val memberId: Long,
 
@@ -57,6 +66,14 @@ class Subscription(
         icon: String? = null,
         memo: String? = null,
         isActive: Boolean? = null,
+        setPausedUntil: Boolean = false,
+        pausedUntil: LocalDate? = null,
+        setStartDate: Boolean = false,
+        startDate: LocalDate? = null,
+        setEndDate: Boolean = false,
+        endDate: LocalDate? = null,
+        setPaymentMethod: Boolean = false,
+        paymentMethod: String? = null,
     ) {
         name?.let { this.name = it }
         price?.let { this.price = it }
@@ -67,6 +84,10 @@ class Subscription(
         icon?.let { this.icon = it }
         memo?.let { this.memo = it }
         isActive?.let { this.isActive = it }
+        if (setPausedUntil) this.pausedUntil = pausedUntil
+        if (setStartDate) this.startDate = startDate
+        if (setEndDate) this.endDate = endDate
+        if (setPaymentMethod) this.paymentMethod = paymentMethod
         this.updatedAt = LocalDateTime.now()
     }
 }

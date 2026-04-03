@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
+import java.time.LocalDate
 
 data class CreateSubscriptionRequest(
     @field:NotBlank
@@ -29,6 +30,9 @@ data class CreateSubscriptionRequest(
     val icon: String,
 
     val memo: String? = null,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
+    val paymentMethod: String? = null,
 )
 
 data class UpdateSubscriptionRequest(
@@ -41,6 +45,12 @@ data class UpdateSubscriptionRequest(
     val icon: String? = null,
     val memo: String? = null,
     val isActive: Boolean? = null,
+    val pausedUntil: LocalDate? = null,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
+    val paymentMethod: String? = null,
+    // null과 "미전송"을 구분하기 위한 플래그
+    val clearPausedUntil: Boolean = false,
 )
 
 data class SubscriptionResponse(
@@ -54,6 +64,10 @@ data class SubscriptionResponse(
     val icon: String,
     val memo: String?,
     val isActive: Boolean,
+    val pausedUntil: String?,
+    val startDate: String?,
+    val endDate: String?,
+    val paymentMethod: String?,
     val createdAt: String,
     val updatedAt: String,
 ) {
@@ -69,6 +83,10 @@ data class SubscriptionResponse(
             icon = entity.icon,
             memo = entity.memo,
             isActive = entity.isActive,
+            pausedUntil = entity.pausedUntil?.toString(),
+            startDate = entity.startDate?.toString(),
+            endDate = entity.endDate?.toString(),
+            paymentMethod = entity.paymentMethod,
             createdAt = entity.createdAt.toString(),
             updatedAt = entity.updatedAt.toString(),
         )
