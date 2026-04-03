@@ -94,12 +94,50 @@ interface Subscription {
   endDate?: string;           // 약정 종료일
   paymentMethod?: string;     // 결제 수단
   currency: 'KRW' | 'USD';   // 구독별 통화
+  isFreeTrial?: boolean;      // 무료 체험 여부
   createdAt: string;
   updatedAt: string;
 }
 ```
 
-## 4. 신규 컴포넌트
+## 4. 추가 구현 사항 (스펙 이후 추가)
+
+### 4.1 통화 관련 버그 수정
+- [x] UpcomingPayments: formatPrice에 currency 전달
+- [x] MonthlyChart: CountUp에 KRW 명시
+- [x] CSV 내보내기: 통화 컬럼 추가
+- [x] SubscriptionCard 접근성: 통화별 가격 읽기
+- [x] MonthlyReport: 통화별 분리 합산 (KRW + USD)
+- [x] Stats 통계: KRW/USD 분리 요약, TOP 5 통화별
+
+### 4.2 한글 검색
+- [x] 44개 프리셋에 keywords 필드 추가 (넷플릭스, 유튜브, 챗지피티 등)
+- [x] PresetPicker에서 name + keywords 모두 매칭
+
+### 4.3 ErrorBoundary
+- [x] 앱 최상위에 에러 경계 적용, 폴백 UI 제공
+
+### 4.4 약정 종료 리마인더
+- [x] scheduleEndDateReminder: 7일 전, 3일 전, 당일 3회 알림
+- [x] 상세 화면: 종료일 D-day 표시
+- [x] 구독 카드: 7일 이내 노란색 배지
+
+### 4.5 무료 체험 추적
+- [x] isFreeTrial 필드 (프론트 + 백엔드 Flyway V4)
+- [x] 폼: 무료 체험 토글
+- [x] 구독 카드: 보라색 "체험 N일" 배지
+
+### 4.6 구독별 통화 (KRW/USD)
+- [x] 폼: KRW/USD 토글 + 통화별 기호
+- [x] 프리셋: ChatGPT $20, Claude $20 등 실제 달러 가격
+- [x] 백엔드: Entity, DTO, Service, Flyway V3 동기화
+
+### 4.7 폼 UI 개선
+- [x] 금액: 천단위 콤마 포맷 + 원/달러 접미사
+- [x] 결제일: 자주 쓰는 날짜 칩 (1,5,10,15,20,25일) + 직접 입력
+- [x] 결제 주기: 라벨+설명 2줄 표시
+
+## 5. 신규 컴포넌트
 
 | 컴포넌트 | 용도 |
 |----------|------|
@@ -110,6 +148,7 @@ interface Subscription {
 | CountUp.tsx | 숫자 카운트업 |
 | DateInput.tsx | 네이티브 날짜 피커 (iOS/Android) |
 | MonthlyReport.tsx | 월간 인사이트 리포트 |
+| ErrorBoundary.tsx | 앱 크래시 방지 폴백 UI |
 
 ## 5. 신규 Store
 
@@ -123,6 +162,7 @@ interface Subscription {
 |--------|------|
 | expo-haptics | 햅틱 피드백 |
 | react-native-gesture-handler | 스와이프 제스처 |
-| react-native-reanimated | 애니메이션 (설치됨, 플러그인 미사용) |
 | @react-native-community/datetimepicker | 네이티브 날짜 피커 |
 | @react-native-async-storage/async-storage | 오프라인 캐시 |
+
+참고: react-native-reanimated는 EAS Build 충돌로 제거됨 (Worklets 버전 불일치)

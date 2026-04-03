@@ -303,3 +303,5 @@ cd backend
 | [카카오 OAuth 실행 계획](docs/plans/plan_kakao-oauth-login.md) | 카카오 소셜 로그인 전환 단계별 작업 목록 |
 | [서비스 개선 스펙](docs/spec/spec_service-improvement.md) | 프리셋 고도화, 핵심 개선, 신규 기능 스펙 |
 | [서비스 개선 실행 계획](docs/plans/plan_service-improvement.md) | 서비스 개선 단계별 작업 목록 |
+| [배포 스펙](docs/spec/spec_deployment.md) | Railway, 카카오 OAuth, EAS Build, Play Store 배포 스펙 |
+| [배포 실행 계획](docs/plans/plan_deployment.md) | 배포 단계별 작업 목록 |
