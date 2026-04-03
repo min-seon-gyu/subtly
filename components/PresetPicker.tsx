@@ -16,9 +16,14 @@ export default function PresetPicker({ onSelect }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filtered = PRESETS.filter((p) => {
-    const matchSearch = !search.trim() || p.name.toLowerCase().includes(search.trim().toLowerCase());
-    const matchCategory = !selectedCategory || p.category === selectedCategory;
-    return matchSearch && matchCategory;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const nameMatch = p.name.toLowerCase().includes(q);
+      const keywordMatch = p.keywords?.toLowerCase().includes(q) ?? false;
+      if (!nameMatch && !keywordMatch) return false;
+    }
+    if (selectedCategory && p.category !== selectedCategory) return false;
+    return true;
   });
 
   return (

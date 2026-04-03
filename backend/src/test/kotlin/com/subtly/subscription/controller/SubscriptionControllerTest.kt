@@ -10,6 +10,7 @@ import com.subtly.auth.service.AuthService
 import com.subtly.subscription.dto.CreateSubscriptionRequest
 import com.subtly.subscription.dto.UpdateSubscriptionRequest
 import com.subtly.subscription.entity.BillingCycle
+import java.time.LocalDate
 import com.subtly.subscription.repository.SubscriptionRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -222,6 +223,49 @@ class SubscriptionControllerTest {
             status { isOk() }
             jsonPath("$.totalMonthly") { value(17000) }
             jsonPath("$.activeCount") { value(1) }
+        }
+    }
+
+    @Test
+    fun `USD 통화 구독 생성 - 201 반환`() {
+        val request = CreateSubscriptionRequest(
+            name = "ChatGPT Plus", price = 20,
+            billingCycle = BillingCycle.MONTHLY, billingDate = 10,
+            category = "productivity", color = "#10A37F", icon = "GP",
+            currency = "USD",
+        )
+
+        mockMvc.post("/api/subscriptions") {
+            header("Authorization", "Bearer $accessToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.currency") { value("USD") }
+            jsonPath("$.price") { value(20) }
+        }
+    }
+
+    @Test
+    fun `신규 필드 포함 구독 생성 - startDate, endDate, paymentMethod`() {
+        val request = CreateSubscriptionRequest(
+            name = "Netflix", price = 17000,
+            billingCycle = BillingCycle.MONTHLY, billingDate = 15,
+            category = "video", color = "#E50914", icon = "N",
+            startDate = LocalDate.of(2025, 1, 1),
+            endDate = LocalDate.of(2026, 1, 1),
+            paymentMethod = "신한카드",
+        )
+
+        mockMvc.post("/api/subscriptions") {
+            header("Authorization", "Bearer $accessToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.startDate") { value("2025-01-01") }
+            jsonPath("$.endDate") { value("2026-01-01") }
+            jsonPath("$.paymentMethod") { value("신한카드") }
         }
     }
 }

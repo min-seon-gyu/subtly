@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, Text } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Toast from 'react-native-toast-message';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useThemeStore } from '../stores/useThemeStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
@@ -61,7 +62,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -92,6 +93,6 @@ export default function RootLayout() {
           ),
         }}
       />
-    </>
+    </ErrorBoundary>
   );
 }
