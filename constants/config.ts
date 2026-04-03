@@ -12,4 +12,4 @@ export const API_BASE_URL =
   });
 
 export const KAKAO_REST_API_KEY = extra?.kakaoRestApiKey ?? '';
-export const KAKAO_REDIRECT_URI = 'subtly://auth';
+export const KAKAO_REDIRECT_URI = 'https://min-seon-gyu.github.io/subtly/auth/callback.html';

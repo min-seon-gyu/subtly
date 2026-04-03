@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Subtly 로그인</title>
+  <style>
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; font-family: -apple-system, sans-serif; background: #F8F9FA; color: #636E72; }
+    .msg { text-align: center; }
+    p { margin-top: 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <p>로그인 처리 중...</p>
+  </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      window.location.href = 'subtly://auth?code=' + encodeURIComponent(code);
+    } else {
+      document.querySelector('.msg p').textContent = '로그인에 실패했습니다. 앱으로 돌아가주세요.';
+    }
+  </script>
+</body>
+</html>
