@@ -25,10 +25,10 @@ interface Props {
   isSubmitting?: boolean;
 }
 
-const CYCLES: { label: string; value: BillingCycle }[] = [
-  { label: '매월', value: 'monthly' },
-  { label: '매년', value: 'yearly' },
-  { label: '매주', value: 'weekly' },
+const CYCLES: { label: string; sub: string; value: BillingCycle }[] = [
+  { label: '매월', sub: '월 결제', value: 'monthly' },
+  { label: '매년', sub: '연 결제', value: 'yearly' },
+  { label: '매주', sub: '주 결제', value: 'weekly' },
 ];
 
 export default function SubscriptionForm({ initialValues, onSubmit, onCancel, submitLabel = '추가', isSubmitting = false }: Props) {
@@ -38,7 +38,13 @@ export default function SubscriptionForm({ initialValues, onSubmit, onCancel, su
   const priceRef = useRef<TextInputType>(null);
   const billingDateRef = useRef<TextInputType>(null);
   const [name, setName] = useState(initialValues?.name ?? '');
-  const [price, setPrice] = useState(initialValues?.price?.toString() ?? '');
+  const [rawPrice, setRawPrice] = useState(initialValues?.price?.toString() ?? '');
+  const price = rawPrice;
+  const setPrice = (text: string) => {
+    const digits = text.replace(/\D/g, '');
+    setRawPrice(digits);
+  };
+  const displayPrice = rawPrice ? Number(rawPrice).toLocaleString('ko-KR') : '';
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(initialValues?.billingCycle ?? 'monthly');
   const [billingDate, setBillingDate] = useState(initialValues?.billingDate?.toString() ?? '1');
   const [category, setCategory] = useState(initialValues?.category ?? 'other');
@@ -94,18 +100,21 @@ export default function SubscriptionForm({ initialValues, onSubmit, onCancel, su
           onSubmitEditing={() => priceRef.current?.focus()}
         />
 
-        <Text style={styles.label}>금액 (원)</Text>
-        <TextInput
-          ref={priceRef}
-          style={[styles.input, price.length > 0 && priceError && styles.inputError]}
-          value={price}
-          onChangeText={setPrice}
-          placeholder="예: 17000"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="numeric"
-          returnKeyType="next"
-          onSubmitEditing={() => billingDateRef.current?.focus()}
-        />
+        <Text style={styles.label}>금액</Text>
+        <View style={[styles.priceRow, price.length > 0 && priceError && styles.inputError]}>
+          <TextInput
+            ref={priceRef}
+            style={styles.priceInput}
+            value={displayPrice}
+            onChangeText={setPrice}
+            placeholder="0"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="numeric"
+            returnKeyType="next"
+            onSubmitEditing={() => billingDateRef.current?.focus()}
+          />
+          <Text style={styles.priceSuffix}>원</Text>
+        </View>
         {price.length > 0 && priceError && <Text style={styles.errorText}>{priceError}</Text>}
 
         <Text style={styles.label}>결제 주기</Text>
@@ -116,24 +125,44 @@ export default function SubscriptionForm({ initialValues, onSubmit, onCancel, su
               style={[styles.cycleButton, billingCycle === c.value && styles.cycleButtonActive]}
               onPress={() => setBillingCycle(c.value)}
             >
-              <Text style={[styles.cycleText, billingCycle === c.value && styles.cycleTextActive]}>
+              <Text style={[styles.cycleLabel, billingCycle === c.value && styles.cycleLabelActive]}>
                 {c.label}
+              </Text>
+              <Text style={[styles.cycleSub, billingCycle === c.value && styles.cycleSubActive]}>
+                {c.sub}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <Text style={styles.label}>결제일</Text>
-        <TextInput
-          ref={billingDateRef}
-          style={[styles.input, billingDate.length > 0 && dateError && styles.inputError]}
-          value={billingDate}
-          onChangeText={setBillingDate}
-          placeholder="1-31"
-          placeholderTextColor={colors.textMuted}
-          keyboardType="numeric"
-          returnKeyType="done"
-        />
+        <View style={styles.dateGrid}>
+          {[1, 5, 10, 15, 20, 25].map((d) => (
+            <TouchableOpacity
+              key={d}
+              style={[styles.dateChip, billingDate === String(d) && styles.dateChipActive]}
+              onPress={() => setBillingDate(String(d))}
+            >
+              <Text style={[styles.dateChipText, billingDate === String(d) && styles.dateChipTextActive]}>
+                {d}일
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.dateCustomRow}>
+          <Text style={styles.dateCustomLabel}>직접 입력</Text>
+          <TextInput
+            ref={billingDateRef}
+            style={[styles.dateCustomInput, billingDate.length > 0 && dateError && styles.inputError]}
+            value={billingDate}
+            onChangeText={setBillingDate}
+            placeholder="1-31"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
+          <Text style={styles.dateCustomSuffix}>일</Text>
+        </View>
         {billingDate.length > 0 && dateError && <Text style={styles.errorText}>{dateError}</Text>}
 
         <Text style={styles.label}>카테고리</Text>
@@ -226,6 +255,27 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
     color: colors.danger,
     marginTop: 4,
   },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingRight: 14,
+  },
+  priceInput: {
+    flex: 1,
+    padding: 14,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  priceSuffix: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   memoInput: {
     height: 80,
     textAlignVertical: 'top',
@@ -236,24 +286,85 @@ const createStyles = (colors: ColorScheme) => StyleSheet.create({
   },
   cycleButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  cycleButtonActive: {
+    backgroundColor: colors.primary + '10',
+    borderColor: colors.primary,
+  },
+  cycleLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+  cycleLabelActive: {
+    color: colors.primary,
+  },
+  cycleSub: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  cycleSubActive: {
+    color: colors.primary,
+  },
+  dateGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dateChip: {
+    width: '15%',
+    paddingVertical: 10,
+    borderRadius: 10,
     backgroundColor: colors.surface,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cycleButtonActive: {
+  dateChipActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  cycleText: {
-    fontSize: 14,
+  dateChipText: {
+    fontSize: 13,
     fontWeight: '600',
     color: colors.textSecondary,
   },
-  cycleTextActive: {
+  dateChipTextActive: {
     color: '#FFFFFF',
+  },
+  dateCustomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  dateCustomLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  dateCustomInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+    width: 60,
+    textAlign: 'center',
+  },
+  dateCustomSuffix: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   categoryGrid: {
     flexDirection: 'row',
