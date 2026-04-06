@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, TextInput, Share, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, TextInput, Share, Linking, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 import { ColorScheme } from '../../constants/colors';

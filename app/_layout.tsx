@@ -5,6 +5,7 @@ import { ActivityIndicator, View, Text } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { useAuthStore } from '../stores/useAuthStore';
 import { KAKAO_REDIRECT_URI } from '../constants/config';
@@ -93,6 +94,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <ErrorBoundary>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
@@ -125,5 +127,6 @@ export default function RootLayout() {
         }}
       />
     </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }

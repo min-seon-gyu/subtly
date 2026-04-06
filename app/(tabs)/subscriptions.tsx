@@ -1,7 +1,6 @@
 import { useCallback, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSubscriptionStore } from '../../stores/useSubscriptionStore';
 import SubscriptionCard from '../../components/SubscriptionCard';
@@ -68,8 +67,7 @@ export default function SubscriptionsScreen() {
   };
 
   return (
-    <GestureHandlerRootView style={styles.safe}>
-      <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>구독 목록</Text>
@@ -130,8 +128,7 @@ export default function SubscriptionsScreen() {
             />
           )}
         </View>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+    </SafeAreaView>
   );
 }
 
